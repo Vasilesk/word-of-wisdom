@@ -1,0 +1,23 @@
+linters:
+  enable-all: true
+  disable:
+    - unused
+    - interfacer
+    - ireturn
+    - varnamelen
+    - maligned
+    - goerr113
+    - scopelint # deprecated
+    - golint # deprecated
+    - exhaustivestruct # deprecated
+
+linters-settings:
+  gci:
+    sections:
+      - Standard
+      - Default
+      - "Prefix(github.com/vasilesk)"
+  godox:
+    keywords:
+      - BUG
+      - FIXME
