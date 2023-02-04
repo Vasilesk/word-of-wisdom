@@ -6,6 +6,7 @@ import (
 
 	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/server"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
+	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/server"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger/zero"
@@ -26,14 +27,16 @@ func main() {
 }
 
 func run(ctx context.Context, l logger.Logger) error {
-	l.Infof("app '%s' was started", app)
+	l.Infof("app '%s' has started", app)
 
 	cfg, err := config.NewFromFile[Config]("cmd/server/config.yml")
 	if err != nil {
 		return fmt.Errorf("reading config: %w", err)
 	}
 
-	service := apiservice.NewService()
+	rnd := renderer.New()
+
+	service := apiservice.NewService(rnd)
 
 	if err := server.RunServer(ctx, l, cfg.Server.ToServerConfig(), service); err != nil {
 		return fmt.Errorf("running server: %w", err)
