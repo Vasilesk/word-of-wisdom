@@ -4,7 +4,7 @@ COPY . /build
 
 WORKDIR /build
 
-RUN go build -o /app ./cmd/server
+RUN go build -o /app ./cmd/wisdom
 
 FROM alpine:3.17
 

@@ -1,4 +1,4 @@
-package server
+package wisdom
 
 type ResponseRandom struct {
 	Wisdom

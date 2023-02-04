@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/server"
+	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/wisdom"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/server"
@@ -13,7 +13,7 @@ import (
 	"github.com/vasilesk/word-of-wisdom/pkg/stopper"
 )
 
-const app = "server"
+const app = "wisdom"
 
 func main() {
 	ctx, cancel := stopper.New(context.Background())
@@ -29,7 +29,7 @@ func main() {
 func run(ctx context.Context, l logger.Logger) error {
 	l.Infof("app '%s' has started", app)
 
-	cfg, err := config.NewFromFile[Config]("cmd/server/config.yml")
+	cfg, err := config.NewFromFile[Config]("cmd/wisdom/config/prod/config.yml")
 	if err != nil {
 		return fmt.Errorf("reading config: %w", err)
 	}
