@@ -5,11 +5,14 @@ import (
 	"fmt"
 
 	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/wisdom"
+	"github.com/vasilesk/word-of-wisdom/internal/service/powchecker"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/server"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger/zero"
+	"github.com/vasilesk/word-of-wisdom/pkg/pow/gopow"
+	"github.com/vasilesk/word-of-wisdom/pkg/signer/jwt"
 	"github.com/vasilesk/word-of-wisdom/pkg/stopper"
 )
 
@@ -34,7 +37,20 @@ func run(ctx context.Context, l logger.Logger) error {
 		return fmt.Errorf("reading config: %w", err)
 	}
 
-	rnd := renderer.New()
+	challengeFactory, err := gopow.NewChallengeFactory(cfg.Pow.Difficulty, cfg.Pow.NonceSize)
+	if err != nil {
+		return fmt.Errorf("creating challenge factory: %w", err)
+	}
+
+	signer := jwt.NewSigner(cfg.Signer.Key)
+
+	powChecker := powchecker.New(l, challengeFactory, signer, cfg.PowChecker.ChallengeValid)
+
+	rnd := renderer.New(
+		renderer.OptionMiddleware(
+			powChecker.HTTPMiddleware(),
+		),
+	)
 
 	service := apiservice.NewService(rnd)
 

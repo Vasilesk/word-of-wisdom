@@ -2,3 +2,10 @@ server:
   port: 8090
   requestTimeout: 10s
   shutdownTimeout: 5s
+signer:
+  key: my-secret-key
+pow:
+  difficulty: 5
+  nonceSize: 1024
+powChecker:
+  challengeValid: 10s

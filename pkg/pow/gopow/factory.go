@@ -29,12 +29,16 @@ type factory struct {
 	nonceSize  int
 }
 
-func (f *factory) GetChallenge(_ context.Context) (pow.Challenge, error) {
+func (f *factory) GetNewChallenge(_ context.Context) (pow.Challenge, error) {
 	nonce := make([]byte, f.nonceSize)
 
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, fmt.Errorf("generating random nonce: %w", err)
 	}
 
-	return NewChallenge(f.difficulty, nonce)
+	return NewRandomChallenge(f.difficulty, nonce)
+}
+
+func (f *factory) RestoreChallenge(_ context.Context, marshaled string) (pow.Challenge, error) {
+	return NewChallenge(marshaled)
 }

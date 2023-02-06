@@ -7,7 +7,23 @@ import (
 )
 
 type Config struct {
-	Server ConfigServer `yaml:"server"`
+	Server     ConfigServer     `yaml:"server"`
+	Signer     ConfigSigner     `yaml:"signer"`
+	Pow        ConfigPow        `yaml:"pow"`
+	PowChecker ConfigPowChecker `yaml:"powChecker"`
+}
+
+type ConfigSigner struct {
+	Key string `yaml:"key"`
+}
+
+type ConfigPow struct {
+	Difficulty int `yaml:"difficulty"`
+	NonceSize  int `yaml:"nonceSize"`
+}
+
+type ConfigPowChecker struct {
+	ChallengeValid time.Duration `yaml:"challengeValid"`
 }
 
 type ConfigServer struct {

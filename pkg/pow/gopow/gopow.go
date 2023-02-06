@@ -16,23 +16,25 @@ type challenge struct {
 	challengeMarshaled string
 }
 
-func NewChallenge(difficulty int, nonce []byte) (pow.Challenge, error) {
-	if difficulty <= 0 {
-		return nil, errors.New("difficulty should be positive")
-	}
-
-	challengeMarshaled := gopow.NewRequest(uint32(difficulty), nonce)
-
+func NewChallenge(marshaled string) (pow.Challenge, error) {
 	var c gopow.Request
 
-	if err := c.UnmarshalText([]byte(challengeMarshaled)); err != nil {
+	if err := c.UnmarshalText([]byte(marshaled)); err != nil {
 		return nil, fmt.Errorf("unmarshalling challenge: %w", err)
 	}
 
 	return &challenge{
 		challenge:          c,
-		challengeMarshaled: challengeMarshaled,
+		challengeMarshaled: marshaled,
 	}, nil
+}
+
+func NewRandomChallenge(difficulty int, nonce []byte) (pow.Challenge, error) {
+	if difficulty <= 0 {
+		return nil, errors.New("difficulty should be positive")
+	}
+
+	return NewChallenge(gopow.NewRequest(uint32(difficulty), nonce))
 }
 
 func (c *challenge) Check(_ context.Context, solution pow.Solution, data pow.Data) (bool, error) {

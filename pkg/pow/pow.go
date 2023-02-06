@@ -8,7 +8,8 @@ import (
 )
 
 type ChallengeFactory interface {
-	GetChallenge(ctx context.Context) (Challenge, error)
+	GetNewChallenge(ctx context.Context) (Challenge, error)
+	RestoreChallenge(_ context.Context, marshaled string) (Challenge, error)
 }
 
 type Challenge interface {
