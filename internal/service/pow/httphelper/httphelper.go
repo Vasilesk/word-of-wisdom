@@ -14,18 +14,26 @@ const (
 	headerSolution = "X-Pow-Solution"
 )
 
-func FetchSolution(r *http.Request) fmt.Stringer {
-	return typeutils.NewStringer(r.Header.Get(headerSolution))
+func FetchChallenge(h http.Header) string {
+	return h.Get(headerChallenge)
 }
 
-func FetchData(r *http.Request) fmt.Stringer {
-	return typeutils.NewStringer(r.Header.Get(headerData))
+func SubmitChallenge(h http.Header, challenge fmt.Stringer) {
+	h.Add(headerChallenge, challenge.String())
 }
 
-func SubmitData(w http.ResponseWriter, data fmt.Stringer) {
-	w.Header().Add(headerData, data.String())
+func FetchData(h http.Header) fmt.Stringer {
+	return typeutils.NewStringer(h.Get(headerData))
 }
 
-func SubmitChallenge(w http.ResponseWriter, challenge fmt.Stringer) {
-	w.Header().Add(headerChallenge, challenge.String())
+func SubmitData(h http.Header, data fmt.Stringer) {
+	h.Add(headerData, data.String())
+}
+
+func FetchSolution(h http.Header) fmt.Stringer {
+	return typeutils.NewStringer(h.Get(headerSolution))
+}
+
+func SubmitSolution(h http.Header, data fmt.Stringer) {
+	h.Add(headerSolution, data.String())
 }

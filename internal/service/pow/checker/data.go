@@ -15,7 +15,7 @@ type powData struct {
 func (d powData) Map() map[string]interface{} {
 	return map[string]interface{}{
 		"challenge":  d.Challenge,
-		"validUntil": d.ValidUntil.UnixNano(),
+		"validUntil": d.ValidUntil.Unix(),
 		"ip":         d.IP,
 		"uri":        d.URI,
 	}
@@ -37,12 +37,12 @@ func powDataFromMap(m map[string]interface{}) (*powData, error) {
 		return nil, errors.New("validUntil was not found")
 	}
 
-	validUntilInt, ok := validUntilI.(int)
+	validUntilFloat, ok := validUntilI.(float64)
 	if !ok {
 		return nil, errors.New("validUntil casting error")
 	}
 
-	validUntil := time.Date(0, 0, 0, 0, 0, 0, validUntilInt, nil)
+	validUntil := time.Unix(int64(validUntilFloat), 0)
 
 	ipI, ok := m["ip"]
 	if !ok {

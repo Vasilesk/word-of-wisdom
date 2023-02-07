@@ -50,6 +50,8 @@ func (s *Service) HTTPMiddleware() func(next http.Handler) http.Handler {
 				if !valid {
 					s.l.Warnf("pow is not correct")
 
+					w.WriteHeader(http.StatusUnauthorized)
+
 					return
 				}
 			}
@@ -65,7 +67,7 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("getting challenge: %w", err)
 	}
 
-	httphelper.SubmitChallenge(w, c)
+	httphelper.SubmitChallenge(w.Header(), c)
 
 	signed, err := s.s.Sign(newPowData(
 		c.String(),
@@ -77,13 +79,13 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("signing data: %w", err)
 	}
 
-	httphelper.SubmitData(w, signed)
+	httphelper.SubmitData(w.Header(), signed)
 
 	return nil
 }
 
 func (s *Service) validatePowInfo(r *http.Request) (bool, error) {
-	data, err := s.s.Restore(httphelper.FetchData(r))
+	data, err := s.s.Restore(httphelper.FetchData(r.Header))
 	if err != nil {
 		return false, fmt.Errorf("restoring data: %w", err)
 	}
@@ -112,8 +114,8 @@ func (s *Service) validatePowInfo(r *http.Request) (bool, error) {
 
 	valid, err := challenge.Check(
 		r.Context(),
-		httphelper.FetchSolution(r),
-		httphelper.FetchData(r),
+		httphelper.FetchSolution(r.Header),
+		httphelper.FetchData(r.Header),
 	)
 	if err != nil {
 		return false, fmt.Errorf("checking solution: %w", err)

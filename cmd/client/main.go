@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vasilesk/word-of-wisdom/internal/service/pow/solver"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/client"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/client/basic"
@@ -36,6 +37,7 @@ func run(ctx context.Context, l logger.Logger) error {
 	}
 
 	httpClient := basic.NewClient(cfg.HTTPClient.Timeout)
+	httpClient = solver.NewPowSolver(httpClient)
 
 	if err := exampleRequests(ctx, l, httpClient); err != nil {
 		return fmt.Errorf("making example requests: %w", err)
