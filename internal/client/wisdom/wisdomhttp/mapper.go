@@ -1,4 +1,4 @@
-package http
+package wisdomhttp
 
 import "github.com/vasilesk/word-of-wisdom/internal/client/wisdom"
 

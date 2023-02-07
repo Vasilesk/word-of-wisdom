@@ -1,2 +1,5 @@
 httpClient:
   timeout: 10s
+api:
+  wisdom:
+    baseUrl: http://localhost:8090/word-of-wisdom

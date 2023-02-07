@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 
+	"github.com/vasilesk/word-of-wisdom/internal/client/wisdom"
+	"github.com/vasilesk/word-of-wisdom/internal/client/wisdom/wisdomhttp"
 	"github.com/vasilesk/word-of-wisdom/internal/service/pow/solver"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
-	"github.com/vasilesk/word-of-wisdom/pkg/http/client"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/client/basic"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger/zero"
@@ -38,42 +38,35 @@ func run(ctx context.Context, l logger.Logger) error {
 	httpClient := basic.NewClient(cfg.HTTPClient.Timeout)
 	httpClient = solver.NewPowSolver(httpClient)
 
-	if err := exampleRequests(ctx, l, httpClient); err != nil {
+	apiClient := wisdomhttp.NewWisdomClient(httpClient, cfg.API.Wisdom.BaseURL)
+
+	if err := exampleRequests(ctx, l, apiClient); err != nil {
 		return fmt.Errorf("making example requests: %w", err)
 	}
 
 	return nil
 }
 
-func exampleRequests(ctx context.Context, l logger.Logger, httpClient client.Doer) error {
+func exampleRequests(ctx context.Context, l logger.Logger, c wisdom.Client) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
-			if err := exampleRequest(ctx, l, httpClient); err != nil {
+			if err := exampleRequest(ctx, l, c); err != nil {
 				return fmt.Errorf("making request: %w", err)
 			}
 		}
 	}
 }
 
-func exampleRequest(ctx context.Context, l logger.Logger, httpClient client.Doer) error {
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8090/word-of-wisdom/random", nil)
+func exampleRequest(ctx context.Context, l logger.Logger, c wisdom.Client) error {
+	resp, err := c.GetRandom(ctx)
 	if err != nil {
-		return fmt.Errorf("creating request: %w", err)
+		return fmt.Errorf("getting random from client: %w", err)
 	}
 
-	req = req.WithContext(ctx)
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("making request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	l.WithData(map[string]interface{}{"code": resp.StatusCode}).Infof("got response")
+	l.WithData(map[string]interface{}{"text": resp.Text}).Infof("got response")
 
 	return nil
 }

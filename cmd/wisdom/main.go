@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/wisdom"
 	"github.com/vasilesk/word-of-wisdom/internal/repo/wisdomwords/static"
 	"github.com/vasilesk/word-of-wisdom/internal/service/pow/checker"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
+	"github.com/vasilesk/word-of-wisdom/pkg/http/middleware"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/server"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger"
@@ -49,6 +51,7 @@ func run(ctx context.Context, l logger.Logger) error {
 
 	rnd := renderer.New(
 		renderer.OptionMiddleware(
+			middleware.NewLogging(l, []string{http.MethodGet, http.MethodPost}),
 			powChecker.HTTPMiddleware(),
 		),
 	)
