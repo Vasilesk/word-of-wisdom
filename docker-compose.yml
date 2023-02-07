@@ -3,6 +3,8 @@ version: '3.1'
 services:
   wisdom:
     image: word-of-wisdom/wisdom
+    environment:
+      CONFIG: "cmd/wisdom/config/prod/config.yml"
     ports:
       - "8090:8090"
     volumes:
@@ -10,6 +12,8 @@ services:
 
   client:
     image: word-of-wisdom/client
+    environment:
+      CONFIG: "cmd/client/config/prod/config.yml"
     volumes:
       - ./cmd/client/config/prod:/cmd/client/config/prod
     links:

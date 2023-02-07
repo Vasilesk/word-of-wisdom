@@ -35,7 +35,7 @@ func main() {
 }
 
 func run(ctx context.Context, l logger.Logger) error {
-	cfg, err := config.NewFromFile[Config]("cmd/wisdom/config/prod/config.yml")
+	cfg, err := config.NewFromEnv[Config]()
 	if err != nil {
 		return fmt.Errorf("reading config: %w", err)
 	}
