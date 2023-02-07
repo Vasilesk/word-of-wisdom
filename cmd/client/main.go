@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/vasilesk/word-of-wisdom/internal/service/pow/solver"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
@@ -55,8 +54,6 @@ func exampleRequests(ctx context.Context, l logger.Logger, httpClient client.Doe
 			if err := exampleRequest(ctx, l, httpClient); err != nil {
 				return fmt.Errorf("making request: %w", err)
 			}
-
-			time.Sleep(1 * time.Second)
 		}
 	}
 }

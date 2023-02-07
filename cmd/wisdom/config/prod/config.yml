@@ -5,7 +5,7 @@ server:
 signer:
   key: my-secret-key
 pow:
-  difficulty: 5
+  difficulty: 25
   nonceSize: 1024
 powChecker:
   challengeValid: 10s
