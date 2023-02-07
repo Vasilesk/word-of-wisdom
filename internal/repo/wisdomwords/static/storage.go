@@ -1,5 +1,6 @@
 package static
 
+//nolint:gochecknoglobals,lll
 var storage = []string{
 	`People change easily. Deal with it.`,
 	`Five simple rules for happiness:  - Free your heart from hatred. - Free your mind from worries. - Live simply. - Give more. - Expect less.`,

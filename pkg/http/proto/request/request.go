@@ -1,6 +1,7 @@
 package request
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ type Request interface {
 	ReadJSON(p interface{}) error
 	GetHeader(key string) string
 	FormValue(key string) string
+	Ctx() context.Context
 	Raw() *http.Request
 }
 
@@ -48,6 +50,10 @@ func (r *request) GetHeader(key string) string {
 
 func (r *request) FormValue(key string) string {
 	return r.r.FormValue(key)
+}
+
+func (r *request) Ctx() context.Context {
+	return r.r.Context()
 }
 
 func (r *request) Raw() *http.Request {

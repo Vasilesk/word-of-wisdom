@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/wisdom"
+	"github.com/vasilesk/word-of-wisdom/internal/repo/wisdomwords/static"
 	"github.com/vasilesk/word-of-wisdom/internal/service/pow/checker"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
@@ -52,7 +53,7 @@ func run(ctx context.Context, l logger.Logger) error {
 		),
 	)
 
-	service := apiservice.NewService(rnd)
+	service := apiservice.NewAPI(l, rnd, static.NewWisdomWords())
 
 	if err := server.RunServer(ctx, l, cfg.Server.ToServerConfig(), service); err != nil {
 		return fmt.Errorf("running server: %w", err)

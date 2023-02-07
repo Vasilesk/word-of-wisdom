@@ -14,6 +14,7 @@ func NewWisdomWords() wisdomwords.Repo {
 type repo struct{}
 
 func (r *repo) GetRandom(_ context.Context) (wisdomwords.Wisdom, error) {
+	//nolint:gosec
 	ind := rand.Int() % len(storage)
 
 	return wisdomwords.Wisdom{Text: storage[ind]}, nil
