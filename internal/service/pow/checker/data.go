@@ -1,4 +1,4 @@
-package powchecker
+package checker
 
 import (
 	"errors"

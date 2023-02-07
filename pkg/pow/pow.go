@@ -3,8 +3,6 @@ package pow
 import (
 	"context"
 	"fmt"
-
-	"github.com/vasilesk/word-of-wisdom/pkg/typeutils"
 )
 
 type ChallengeFactory interface {
@@ -23,5 +21,5 @@ type Solution interface {
 }
 
 type Data interface {
-	typeutils.Byter
+	fmt.Stringer
 }

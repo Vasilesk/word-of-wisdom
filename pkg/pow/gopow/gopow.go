@@ -38,7 +38,7 @@ func NewRandomChallenge(difficulty int, nonce []byte) (pow.Challenge, error) {
 }
 
 func (c *challenge) Check(_ context.Context, solution pow.Solution, data pow.Data) (bool, error) {
-	res, err := gopow.Check(c.challengeMarshaled, solution.String(), data.Bytes())
+	res, err := gopow.Check(c.challengeMarshaled, solution.String(), []byte(data.String()))
 	if err != nil {
 		return false, fmt.Errorf("checking solution: %w", err)
 	}
@@ -47,7 +47,7 @@ func (c *challenge) Check(_ context.Context, solution pow.Solution, data pow.Dat
 }
 
 func (c *challenge) Solve(_ context.Context, data pow.Data) (pow.Solution, error) {
-	proof, err := c.challenge.Fulfil(data.Bytes()).MarshalText()
+	proof, err := c.challenge.Fulfil([]byte(data.String())).MarshalText()
 	if err != nil {
 		return nil, fmt.Errorf("marshalling proof: %w", err)
 	}

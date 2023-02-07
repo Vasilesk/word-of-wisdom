@@ -1,21 +1,14 @@
-package powchecker
+package checker
 
 import (
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/vasilesk/word-of-wisdom/internal/service/pow/httphelper"
 	"github.com/vasilesk/word-of-wisdom/pkg/logger"
 	"github.com/vasilesk/word-of-wisdom/pkg/pow"
 	"github.com/vasilesk/word-of-wisdom/pkg/signer"
-	"github.com/vasilesk/word-of-wisdom/pkg/typeutils"
-)
-
-const (
-	headerChallenge = "X-Pow-Challenge"
-	headerData      = "X-Pow-Data"
-
-	headerSolution = "X-Pow-Solution"
 )
 
 type Service struct {
@@ -49,7 +42,7 @@ func (s *Service) HTTPMiddleware() func(next http.Handler) http.Handler {
 				if err != nil {
 					s.l.WithError(err).Errorf("cannot validate pow challenge info")
 
-					w.WriteHeader(http.StatusBadRequest)
+					w.WriteHeader(http.StatusUnauthorized)
 
 					return
 				}
@@ -72,7 +65,7 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("getting challenge: %w", err)
 	}
 
-	w.Header().Add(headerChallenge, c.String())
+	httphelper.SubmitChallenge(w, c)
 
 	signed, err := s.s.Sign(newPowData(
 		c.String(),
@@ -84,13 +77,13 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("signing data: %w", err)
 	}
 
-	w.Header().Add(headerData, signed.String())
+	httphelper.SubmitData(w, signed)
 
 	return nil
 }
 
 func (s *Service) validatePowInfo(r *http.Request) (bool, error) {
-	data, err := s.s.Restore(typeutils.NewStringer(r.Header.Get(headerData)))
+	data, err := s.s.Restore(httphelper.FetchData(r))
 	if err != nil {
 		return false, fmt.Errorf("restoring data: %w", err)
 	}
@@ -119,8 +112,8 @@ func (s *Service) validatePowInfo(r *http.Request) (bool, error) {
 
 	valid, err := challenge.Check(
 		r.Context(),
-		typeutils.NewStringer(r.Header.Get(headerSolution)),
-		typeutils.NewByterFromString(r.Header.Get(headerData)),
+		httphelper.FetchSolution(r),
+		httphelper.FetchData(r),
 	)
 	if err != nil {
 		return false, fmt.Errorf("checking solution: %w", err)

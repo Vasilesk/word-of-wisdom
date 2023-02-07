@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	apiservice "github.com/vasilesk/word-of-wisdom/internal/api/wisdom"
-	"github.com/vasilesk/word-of-wisdom/internal/service/powchecker"
+	"github.com/vasilesk/word-of-wisdom/internal/service/pow/checker"
 	"github.com/vasilesk/word-of-wisdom/pkg/config"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/proto/renderer"
 	"github.com/vasilesk/word-of-wisdom/pkg/http/server"
@@ -24,14 +24,14 @@ func main() {
 
 	l := zero.New(app)
 
+	l.Infof("app '%s' has started", app)
+
 	if err := run(ctx, l); err != nil {
 		l.Fatalf("while running app '%s' got the next error: %v", app, err)
 	}
 }
 
 func run(ctx context.Context, l logger.Logger) error {
-	l.Infof("app '%s' has started", app)
-
 	cfg, err := config.NewFromFile[Config]("cmd/wisdom/config/prod/config.yml")
 	if err != nil {
 		return fmt.Errorf("reading config: %w", err)
@@ -44,7 +44,7 @@ func run(ctx context.Context, l logger.Logger) error {
 
 	signer := jwt.NewSigner(cfg.Signer.Key)
 
-	powChecker := powchecker.New(l, challengeFactory, signer, cfg.PowChecker.ChallengeValid)
+	powChecker := checker.New(l, challengeFactory, signer, cfg.PowChecker.ChallengeValid)
 
 	rnd := renderer.New(
 		renderer.OptionMiddleware(
