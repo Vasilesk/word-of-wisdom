@@ -14,7 +14,7 @@ import (
 	stdmock "github.com/vasilesk/word-of-wisdom/pkg/stdmock/mocks"
 )
 
-func TestService_HTTPMiddleware(t *testing.T) {
+func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 	const (
 		url           = "/my-uri"
 		challengeStr  = "challenge-string"
@@ -23,89 +23,75 @@ func TestService_HTTPMiddleware(t *testing.T) {
 
 	ctx := context.Background()
 
-	method := http.MethodOptions
-
 	now := func() time.Time {
 		return time.Unix(0, 0)
 	}
 
-	l := loggermock.NewLogger(t)
-	cf := powmock.NewChallengeFactory(t)
-	s := signermock.NewSigner(t)
+	tests := []struct {
+		name                    string
+		method                  string
+		prepareLogger           func(l *loggermock.Logger)
+		prepareChallengeFactory func(f *powmock.ChallengeFactory)
+		prepareSigner           func(s *signermock.Signer)
+		prepareWriter           func(w *stdmock.ResponseWriter)
+	}{
+		{
+			name:   "options request",
+			method: http.MethodOptions,
+			prepareLogger: func(l *loggermock.Logger) {
+				//
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				clg := powmock.NewChallenge(t)
+				clg.On("String").Return(challengeStr).Times(2)
 
-	handler := stdmock.NewHandler(t)
-	writer := stdmock.NewResponseWriter(t)
-	stringer := stdmock.NewStringer(t)
+				f.On("GetNewChallenge", ctx).Return(clg, nil).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {
+				stringer := stdmock.NewStringer(t)
+				stringer.On("String").Return("").Once()
 
-	req, err := http.NewRequest(method, url, nil)
-	assert.NoError(t, err)
+				s.On("Sign", &powData{
+					Challenge:  challengeStr,
+					ValidUntil: now().Add(validDuration),
+					IP:         "",
+					URI:        url,
+				}).Return(stringer, nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("Header").Return(http.Header{}).Times(2)
+				w.On("WriteHeader", http.StatusOK).Once()
+			},
+		},
+	}
 
-	req = req.WithContext(ctx)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			l := loggermock.NewLogger(t)
+			tc.prepareLogger(l)
 
-	// prepare block
+			cf := powmock.NewChallengeFactory(t)
+			tc.prepareChallengeFactory(cf)
 
-	clg := powmock.NewChallenge(t)
-	clg.On("String").Return(challengeStr).Times(2)
+			s := signermock.NewSigner(t)
+			tc.prepareSigner(s)
 
-	cf.On("GetNewChallenge", ctx).Return(clg, nil).Once()
+			w := stdmock.NewResponseWriter(t)
+			tc.prepareWriter(w)
 
-	stringer.On("String").Return("").Once()
+			r, err := http.NewRequest(tc.method, url, nil)
+			assert.NoError(t, err)
 
-	s.On("Sign", &powData{
-		Challenge:  challengeStr,
-		ValidUntil: now().Add(validDuration),
-		IP:         "",
-		URI:        url,
-	}).Return(stringer, nil)
+			r = r.WithContext(ctx)
 
-	writer.On("Header").Return(http.Header{}).Times(2)
+			handler := stdmock.NewHandler(t)
+			handler.On("ServeHTTP", w, r).Once()
 
-	writer.On("WriteHeader", http.StatusOK).Once()
+			srv := New(l, cf, s, validDuration)
+			srv.now = now
 
-	handler.On("ServeHTTP", writer, req).Once()
-
-	// prepare block ends
-
-	srv := New(l, cf, s, validDuration)
-	srv.now = now
-
-	handlerWithMiddleware := srv.HTTPMiddleware()(handler)
-	handlerWithMiddleware.ServeHTTP(writer, req)
+			handlerWithMiddleware := srv.HTTPMiddleware()(handler)
+			handlerWithMiddleware.ServeHTTP(w, r)
+		})
+	}
 }
-
-//func TestService_HTTPMiddleware(t *testing.T) {
-//	type fields struct {
-//		l             logger.Logger
-//		cf            pow.ChallengeFactory
-//		s             signer.Signer
-//		validDuration time.Duration
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		want   func(next http.Handler) http.Handler
-//	}{
-//		{
-//			name: "basic",
-//			fields: fields{
-//				l:             nil,
-//				cf:            nil,
-//				s:             nil,
-//				validDuration: 0,
-//			},
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			s := &Service{
-//				l:             tt.fields.l,
-//				cf:            tt.fields.cf,
-//				s:             tt.fields.s,
-//				validDuration: tt.fields.validDuration,
-//			}
-//			if got := s.HTTPMiddleware(); !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("HTTPMiddleware() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
