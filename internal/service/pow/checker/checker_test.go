@@ -1,4 +1,4 @@
-//nolint:funlen
+//nolint:funlen,maintidx
 package checker
 
 import (
@@ -25,8 +25,6 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 	const (
 		url           = "/my-uri"
 		challengeStr  = "challenge-string"
-		dataStr       = "data-string"
-		solutionStr   = "solution-string"
 		validDuration = time.Second
 	)
 
@@ -197,6 +195,103 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 				data := map[string]interface{}{
 					"challenge":  challengeStr,
 					"validUntil": float64(now().Add(-time.Second).Unix()),
+					"ip":         "",
+					"uri":        url,
+				}
+
+				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusUnauthorized).Once()
+			},
+			expectErr: true,
+		},
+		{
+			name:   "get request another ip",
+			method: http.MethodGet,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("Warnf", "pow is not correct").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
+			prepareSigner: func(s *signermock.Signer) {
+				data := map[string]interface{}{
+					"challenge":  challengeStr,
+					"validUntil": float64(now().Unix()) + validDuration.Seconds(),
+					"ip":         "another",
+					"uri":        url,
+				}
+
+				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusUnauthorized).Once()
+			},
+			expectErr: true,
+		},
+		{
+			name:   "get request another url",
+			method: http.MethodGet,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("Warnf", "pow is not correct").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
+			prepareSigner: func(s *signermock.Signer) {
+				data := map[string]interface{}{
+					"challenge":  challengeStr,
+					"validUntil": float64(now().Unix()) + validDuration.Seconds(),
+					"ip":         "",
+					"uri":        url + "/another",
+				}
+
+				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusUnauthorized).Once()
+			},
+			expectErr: true,
+		},
+		{
+			name:   "get request error restoring challenge",
+			method: http.MethodGet,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("WithError", fmt.Errorf("restoring challenge: %w", err)).Return(l).Once()
+				l.On("Errorf", "cannot validate pow challenge info").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				f.On("RestoreChallenge", ctx, challengeStr).Return(nil, err).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {
+				data := map[string]interface{}{
+					"challenge":  challengeStr,
+					"validUntil": float64(now().Unix()) + validDuration.Seconds(),
+					"ip":         "",
+					"uri":        url,
+				}
+
+				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusUnauthorized).Once()
+			},
+			expectErr: true,
+		},
+		{
+			name:   "get request error checking solution",
+			method: http.MethodGet,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("WithError", fmt.Errorf("checking solution: %w", err)).Return(l).Once()
+				l.On("Errorf", "cannot validate pow challenge info").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				clg := powmock.NewChallenge(t)
+				clg.On("Check", ctx, mock.Anything, mock.Anything).Return(false, err).Once()
+
+				f.On("RestoreChallenge", ctx, challengeStr).Return(clg, nil).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {
+				data := map[string]interface{}{
+					"challenge":  challengeStr,
+					"validUntil": float64(now().Unix()) + validDuration.Seconds(),
 					"ip":         "",
 					"uri":        url,
 				}
