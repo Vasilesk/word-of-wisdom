@@ -3,6 +3,8 @@ package checker
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -28,6 +30,8 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 		validDuration = time.Second
 	)
 
+	err := errors.New("error")
+
 	ctx := context.Background()
 
 	now := func() time.Time {
@@ -41,6 +45,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 		prepareChallengeFactory func(f *powmock.ChallengeFactory)
 		prepareSigner           func(s *signermock.Signer)
 		prepareWriter           func(w *stdmock.ResponseWriter)
+		expectErr               bool
 	}{
 		{
 			name:   "options request",
@@ -69,6 +74,49 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 				w.On("Header").Return(http.Header{}).Times(2)
 				w.On("WriteHeader", http.StatusOK).Once()
 			},
+			expectErr: false,
+		},
+		{
+			name:   "options request getting challenge error",
+			method: http.MethodOptions,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("WithError", fmt.Errorf("getting challenge: %w", err)).Return(l).Once()
+				l.On("Errorf", "cannot submit pow challenge info").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				f.On("GetNewChallenge", ctx).Return(nil, err).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusInternalServerError).Once()
+			},
+			expectErr: true,
+		},
+		{
+			name:   "options request signing error",
+			method: http.MethodOptions,
+			prepareLogger: func(l *loggermock.Logger) {
+				l.On("WithError", fmt.Errorf("signing data: %w", err)).Return(l).Once()
+				l.On("Errorf", "cannot submit pow challenge info").Once()
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				clg := powmock.NewChallenge(t)
+				clg.On("String").Return(challengeStr).Once()
+
+				f.On("GetNewChallenge", ctx).Return(clg, nil).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {
+				s.On("Sign", &powData{
+					Challenge:  challengeStr,
+					ValidUntil: now().Add(validDuration),
+					IP:         "",
+					URI:        url,
+				}).Return(nil, err)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusInternalServerError).Once()
+			},
+			expectErr: true,
 		},
 		{
 			name:   "get request",
@@ -95,6 +143,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			prepareWriter: func(w *stdmock.ResponseWriter) {
 				w.On("WriteHeader", http.StatusOK).Once()
 			},
+			expectErr: false,
 		},
 	}
 
@@ -121,7 +170,9 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			r = r.WithContext(ctx)
 
 			handler := stdmock.NewHandler(t)
-			handler.On("ServeHTTP", w, r).Once()
+			if !tc.expectErr {
+				handler.On("ServeHTTP", w, r).Once()
+			}
 
 			srv := New(l, cf, s, validDuration)
 			srv.now = now
