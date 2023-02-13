@@ -1,3 +1,4 @@
+//nolint:funlen
 package checker
 
 import (
@@ -7,17 +8,23 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	loggermock "github.com/vasilesk/word-of-wisdom/pkg/logger/mocks"
 	powmock "github.com/vasilesk/word-of-wisdom/pkg/pow/mocks"
 	signermock "github.com/vasilesk/word-of-wisdom/pkg/signer/mocks"
 	stdmock "github.com/vasilesk/word-of-wisdom/pkg/stdmock/mocks"
+	"github.com/vasilesk/word-of-wisdom/pkg/typeutils"
 )
 
 func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
+	t.Parallel()
+
 	const (
 		url           = "/my-uri"
 		challengeStr  = "challenge-string"
+		dataStr       = "data-string"
+		solutionStr   = "solution-string"
 		validDuration = time.Second
 	)
 
@@ -63,10 +70,39 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 				w.On("WriteHeader", http.StatusOK).Once()
 			},
 		},
+		{
+			name:   "get request",
+			method: http.MethodGet,
+			prepareLogger: func(l *loggermock.Logger) {
+				//
+			},
+			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
+				clg := powmock.NewChallenge(t)
+				clg.On("Check", ctx, mock.Anything, mock.Anything).Return(true, nil).Once()
+
+				f.On("RestoreChallenge", ctx, challengeStr).Return(clg, nil).Once()
+			},
+			prepareSigner: func(s *signermock.Signer) {
+				data := map[string]interface{}{
+					"challenge":  challengeStr,
+					"validUntil": float64(time.Now().Unix()) + validDuration.Seconds(),
+					"ip":         "",
+					"uri":        url,
+				}
+
+				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+			},
+			prepareWriter: func(w *stdmock.ResponseWriter) {
+				w.On("WriteHeader", http.StatusOK).Once()
+			},
+		},
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			l := loggermock.NewLogger(t)
 			tc.prepareLogger(l)
 
