@@ -18,10 +18,12 @@ type Service struct {
 	s  signer.Signer
 
 	validDuration time.Duration
+
+	now func() time.Time
 }
 
 func New(l logger.Logger, cf pow.ChallengeFactory, s signer.Signer, valid time.Duration) *Service {
-	return &Service{l: l, cf: cf, s: s, validDuration: valid}
+	return &Service{l: l, cf: cf, s: s, validDuration: valid, now: time.Now}
 }
 
 func (s *Service) HTTPMiddleware() func(next http.Handler) http.Handler {
@@ -56,6 +58,8 @@ func (s *Service) HTTPMiddleware() func(next http.Handler) http.Handler {
 				}
 			}
 
+			w.WriteHeader(http.StatusOK)
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -67,11 +71,9 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("getting challenge: %w", err)
 	}
 
-	httphelper.SubmitChallenge(w.Header(), c)
-
 	signed, err := s.s.Sign(newPowData(
 		c.String(),
-		time.Now().Add(s.validDuration),
+		s.now().Add(s.validDuration),
 		r.Header.Get("X-Forwarded-For"),
 		r.URL.RequestURI(),
 	))
@@ -79,6 +81,7 @@ func (s *Service) submitPowInfo(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("signing data: %w", err)
 	}
 
+	httphelper.SubmitChallenge(w.Header(), c)
 	httphelper.SubmitData(w.Header(), signed)
 
 	return nil
@@ -95,7 +98,7 @@ func (s *Service) validatePowInfo(r *http.Request) (bool, error) {
 		return false, fmt.Errorf("casting data: %w", err)
 	}
 
-	if dataCasted.ValidUntil.Before(time.Now()) {
+	if dataCasted.ValidUntil.Before(s.now()) {
 		return false, nil
 	}
 
