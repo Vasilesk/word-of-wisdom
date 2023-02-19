@@ -12,6 +12,14 @@ type Signer struct {
 	mock.Mock
 }
 
+type Signer_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *Signer) EXPECT() *Signer_Expecter {
+	return &Signer_Expecter{mock: &_m.Mock}
+}
+
 // Restore provides a mock function with given fields: signed
 func (_m *Signer) Restore(signed signer.Signed) (signer.Data, error) {
 	ret := _m.Called(signed)
@@ -38,6 +46,34 @@ func (_m *Signer) Restore(signed signer.Signed) (signer.Data, error) {
 	return r0, r1
 }
 
+// Signer_Restore_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Restore'
+type Signer_Restore_Call struct {
+	*mock.Call
+}
+
+// Restore is a helper method to define mock.On call
+//   - signed signer.Signed
+func (_e *Signer_Expecter) Restore(signed interface{}) *Signer_Restore_Call {
+	return &Signer_Restore_Call{Call: _e.mock.On("Restore", signed)}
+}
+
+func (_c *Signer_Restore_Call) Run(run func(signed signer.Signed)) *Signer_Restore_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(signer.Signed))
+	})
+	return _c
+}
+
+func (_c *Signer_Restore_Call) Return(_a0 signer.Data, _a1 error) *Signer_Restore_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Signer_Restore_Call) RunAndReturn(run func(signer.Signed) (signer.Data, error)) *Signer_Restore_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Sign provides a mock function with given fields: data
 func (_m *Signer) Sign(data signer.Data) (signer.Signed, error) {
 	ret := _m.Called(data)
@@ -62,6 +98,34 @@ func (_m *Signer) Sign(data signer.Data) (signer.Signed, error) {
 	}
 
 	return r0, r1
+}
+
+// Signer_Sign_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Sign'
+type Signer_Sign_Call struct {
+	*mock.Call
+}
+
+// Sign is a helper method to define mock.On call
+//   - data signer.Data
+func (_e *Signer_Expecter) Sign(data interface{}) *Signer_Sign_Call {
+	return &Signer_Sign_Call{Call: _e.mock.On("Sign", data)}
+}
+
+func (_c *Signer_Sign_Call) Run(run func(data signer.Data)) *Signer_Sign_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(signer.Data))
+	})
+	return _c
+}
+
+func (_c *Signer_Sign_Call) Return(_a0 signer.Signed, _a1 error) *Signer_Sign_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Signer_Sign_Call) RunAndReturn(run func(signer.Data) (signer.Signed, error)) *Signer_Sign_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 type mockConstructorTestingTNewSigner interface {

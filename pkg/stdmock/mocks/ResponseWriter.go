@@ -13,6 +13,14 @@ type ResponseWriter struct {
 	mock.Mock
 }
 
+type ResponseWriter_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *ResponseWriter) EXPECT() *ResponseWriter_Expecter {
+	return &ResponseWriter_Expecter{mock: &_m.Mock}
+}
+
 // Header provides a mock function with given fields:
 func (_m *ResponseWriter) Header() http.Header {
 	ret := _m.Called()
@@ -27,6 +35,33 @@ func (_m *ResponseWriter) Header() http.Header {
 	}
 
 	return r0
+}
+
+// ResponseWriter_Header_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Header'
+type ResponseWriter_Header_Call struct {
+	*mock.Call
+}
+
+// Header is a helper method to define mock.On call
+func (_e *ResponseWriter_Expecter) Header() *ResponseWriter_Header_Call {
+	return &ResponseWriter_Header_Call{Call: _e.mock.On("Header")}
+}
+
+func (_c *ResponseWriter_Header_Call) Run(run func()) *ResponseWriter_Header_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *ResponseWriter_Header_Call) Return(_a0 http.Header) *ResponseWriter_Header_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ResponseWriter_Header_Call) RunAndReturn(run func() http.Header) *ResponseWriter_Header_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Write provides a mock function with given fields: _a0
@@ -53,9 +88,65 @@ func (_m *ResponseWriter) Write(_a0 []byte) (int, error) {
 	return r0, r1
 }
 
+// ResponseWriter_Write_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Write'
+type ResponseWriter_Write_Call struct {
+	*mock.Call
+}
+
+// Write is a helper method to define mock.On call
+//   - _a0 []byte
+func (_e *ResponseWriter_Expecter) Write(_a0 interface{}) *ResponseWriter_Write_Call {
+	return &ResponseWriter_Write_Call{Call: _e.mock.On("Write", _a0)}
+}
+
+func (_c *ResponseWriter_Write_Call) Run(run func(_a0 []byte)) *ResponseWriter_Write_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte))
+	})
+	return _c
+}
+
+func (_c *ResponseWriter_Write_Call) Return(_a0 int, _a1 error) *ResponseWriter_Write_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ResponseWriter_Write_Call) RunAndReturn(run func([]byte) (int, error)) *ResponseWriter_Write_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // WriteHeader provides a mock function with given fields: statusCode
 func (_m *ResponseWriter) WriteHeader(statusCode int) {
 	_m.Called(statusCode)
+}
+
+// ResponseWriter_WriteHeader_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WriteHeader'
+type ResponseWriter_WriteHeader_Call struct {
+	*mock.Call
+}
+
+// WriteHeader is a helper method to define mock.On call
+//   - statusCode int
+func (_e *ResponseWriter_Expecter) WriteHeader(statusCode interface{}) *ResponseWriter_WriteHeader_Call {
+	return &ResponseWriter_WriteHeader_Call{Call: _e.mock.On("WriteHeader", statusCode)}
+}
+
+func (_c *ResponseWriter_WriteHeader_Call) Run(run func(statusCode int)) *ResponseWriter_WriteHeader_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int))
+	})
+	return _c
+}
+
+func (_c *ResponseWriter_WriteHeader_Call) Return() *ResponseWriter_WriteHeader_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *ResponseWriter_WriteHeader_Call) RunAndReturn(run func(int)) *ResponseWriter_WriteHeader_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 type mockConstructorTestingTNewResponseWriter interface {

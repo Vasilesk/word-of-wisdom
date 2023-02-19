@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-//go:generate mockery --name ChallengeFactory
+//go:generate mockery --with-expecter --name ChallengeFactory
 type ChallengeFactory interface {
 	GetNewChallenge(ctx context.Context) (Challenge, error)
 	RestoreChallenge(_ context.Context, marshaled string) (Challenge, error)
 }
 
-//go:generate mockery --name Challenge
+//go:generate mockery --with-expecter --name Challenge
 type Challenge interface {
 	Check(ctx context.Context, solution Solution, data Data) (bool, error)
 	Solve(ctx context.Context, data Data) (Solution, error)

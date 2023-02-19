@@ -14,6 +14,14 @@ type Challenge struct {
 	mock.Mock
 }
 
+type Challenge_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *Challenge) EXPECT() *Challenge_Expecter {
+	return &Challenge_Expecter{mock: &_m.Mock}
+}
+
 // Check provides a mock function with given fields: ctx, solution, data
 func (_m *Challenge) Check(ctx context.Context, solution pow.Solution, data pow.Data) (bool, error) {
 	ret := _m.Called(ctx, solution, data)
@@ -36,6 +44,36 @@ func (_m *Challenge) Check(ctx context.Context, solution pow.Solution, data pow.
 	}
 
 	return r0, r1
+}
+
+// Challenge_Check_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Check'
+type Challenge_Check_Call struct {
+	*mock.Call
+}
+
+// Check is a helper method to define mock.On call
+//   - ctx context.Context
+//   - solution pow.Solution
+//   - data pow.Data
+func (_e *Challenge_Expecter) Check(ctx interface{}, solution interface{}, data interface{}) *Challenge_Check_Call {
+	return &Challenge_Check_Call{Call: _e.mock.On("Check", ctx, solution, data)}
+}
+
+func (_c *Challenge_Check_Call) Run(run func(ctx context.Context, solution pow.Solution, data pow.Data)) *Challenge_Check_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pow.Solution), args[2].(pow.Data))
+	})
+	return _c
+}
+
+func (_c *Challenge_Check_Call) Return(_a0 bool, _a1 error) *Challenge_Check_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Challenge_Check_Call) RunAndReturn(run func(context.Context, pow.Solution, pow.Data) (bool, error)) *Challenge_Check_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Solve provides a mock function with given fields: ctx, data
@@ -64,6 +102,35 @@ func (_m *Challenge) Solve(ctx context.Context, data pow.Data) (pow.Solution, er
 	return r0, r1
 }
 
+// Challenge_Solve_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Solve'
+type Challenge_Solve_Call struct {
+	*mock.Call
+}
+
+// Solve is a helper method to define mock.On call
+//   - ctx context.Context
+//   - data pow.Data
+func (_e *Challenge_Expecter) Solve(ctx interface{}, data interface{}) *Challenge_Solve_Call {
+	return &Challenge_Solve_Call{Call: _e.mock.On("Solve", ctx, data)}
+}
+
+func (_c *Challenge_Solve_Call) Run(run func(ctx context.Context, data pow.Data)) *Challenge_Solve_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pow.Data))
+	})
+	return _c
+}
+
+func (_c *Challenge_Solve_Call) Return(_a0 pow.Solution, _a1 error) *Challenge_Solve_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Challenge_Solve_Call) RunAndReturn(run func(context.Context, pow.Data) (pow.Solution, error)) *Challenge_Solve_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // String provides a mock function with given fields:
 func (_m *Challenge) String() string {
 	ret := _m.Called()
@@ -76,6 +143,33 @@ func (_m *Challenge) String() string {
 	}
 
 	return r0
+}
+
+// Challenge_String_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'String'
+type Challenge_String_Call struct {
+	*mock.Call
+}
+
+// String is a helper method to define mock.On call
+func (_e *Challenge_Expecter) String() *Challenge_String_Call {
+	return &Challenge_String_Call{Call: _e.mock.On("String")}
+}
+
+func (_c *Challenge_String_Call) Run(run func()) *Challenge_String_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Challenge_String_Call) Return(_a0 string) *Challenge_String_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Challenge_String_Call) RunAndReturn(run func() string) *Challenge_String_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 type mockConstructorTestingTNewChallenge interface {

@@ -2,7 +2,7 @@ package stdmock
 
 import "net/http"
 
-//go:generate mockery --all
+//go:generate mockery --with-expecter --all
 
 type Handler interface {
 	http.Handler

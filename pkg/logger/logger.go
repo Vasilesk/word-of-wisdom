@@ -1,6 +1,6 @@
 package logger
 
-//go:generate mockery --name Logger
+//go:generate mockery --with-expecter --name Logger
 type Logger interface {
 	Fatalf(format string, v ...interface{})
 	Errorf(format string, v ...interface{})

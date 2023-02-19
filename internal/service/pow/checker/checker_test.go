@@ -53,15 +53,15 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
 				clg := powmock.NewChallenge(t)
-				clg.On("String").Return(challengeStr).Times(2)
+				clg.EXPECT().String().Return(challengeStr).Times(2)
 
-				f.On("GetNewChallenge", ctx).Return(clg, nil).Once()
+				f.EXPECT().GetNewChallenge(ctx).Return(clg, nil).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {
 				stringer := stdmock.NewStringer(t)
-				stringer.On("String").Return("").Once()
+				stringer.EXPECT().String().Return("").Once()
 
-				s.On("Sign", &powData{
+				s.EXPECT().Sign(&powData{
 					Challenge:  challengeStr,
 					ValidUntil: now().Add(validDuration),
 					IP:         "",
@@ -69,8 +69,8 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 				}).Return(stringer, nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("Header").Return(http.Header{}).Times(2)
-				w.On("WriteHeader", http.StatusOK).Once()
+				w.EXPECT().Header().Return(http.Header{}).Times(2)
+				w.EXPECT().WriteHeader(http.StatusOK).Once()
 			},
 			expectErr: false,
 		},
@@ -78,15 +78,15 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "options request getting challenge error",
 			method: http.MethodOptions,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("WithError", fmt.Errorf("getting challenge: %w", err)).Return(l).Once()
-				l.On("Errorf", "cannot submit pow challenge info").Once()
+				l.EXPECT().WithError(fmt.Errorf("getting challenge: %w", err)).Return(l).Once()
+				l.EXPECT().Errorf("cannot submit pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
-				f.On("GetNewChallenge", ctx).Return(nil, err).Once()
+				f.EXPECT().GetNewChallenge(ctx).Return(nil, err).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusInternalServerError).Once()
+				w.EXPECT().WriteHeader(http.StatusInternalServerError).Once()
 			},
 			expectErr: true,
 		},
@@ -94,17 +94,17 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "options request signing error",
 			method: http.MethodOptions,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("WithError", fmt.Errorf("signing data: %w", err)).Return(l).Once()
-				l.On("Errorf", "cannot submit pow challenge info").Once()
+				l.EXPECT().WithError(fmt.Errorf("signing data: %w", err)).Return(l).Once()
+				l.EXPECT().Errorf("cannot submit pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
 				clg := powmock.NewChallenge(t)
-				clg.On("String").Return(challengeStr).Once()
+				clg.EXPECT().String().Return(challengeStr).Once()
 
-				f.On("GetNewChallenge", ctx).Return(clg, nil).Once()
+				f.EXPECT().GetNewChallenge(ctx).Return(clg, nil).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {
-				s.On("Sign", &powData{
+				s.EXPECT().Sign(&powData{
 					Challenge:  challengeStr,
 					ValidUntil: now().Add(validDuration),
 					IP:         "",
@@ -112,7 +112,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 				}).Return(nil, err)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusInternalServerError).Once()
+				w.EXPECT().WriteHeader(http.StatusInternalServerError).Once()
 			},
 			expectErr: true,
 		},
@@ -124,9 +124,9 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
 				clg := powmock.NewChallenge(t)
-				clg.On("Check", ctx, mock.Anything, mock.Anything).Return(true, nil).Once()
+				clg.EXPECT().Check(ctx, mock.Anything, mock.Anything).Return(true, nil).Once()
 
-				f.On("RestoreChallenge", ctx, challengeStr).Return(clg, nil).Once()
+				f.EXPECT().RestoreChallenge(ctx, challengeStr).Return(clg, nil).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {
 				data := map[string]interface{}{
@@ -136,10 +136,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusOK).Once()
+				w.EXPECT().WriteHeader(http.StatusOK).Once()
 			},
 			expectErr: false,
 		},
@@ -147,15 +147,15 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request restoring error",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("WithError", fmt.Errorf("restoring data: %w", err)).Return(l).Once()
-				l.On("Errorf", "cannot validate pow challenge info").Once()
+				l.EXPECT().WithError(fmt.Errorf("restoring data: %w", err)).Return(l).Once()
+				l.EXPECT().Errorf("cannot validate pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
 			prepareSigner: func(s *signermock.Signer) {
-				s.On("Restore", mock.Anything).Return(nil, err)
+				s.EXPECT().Restore(mock.Anything).Return(nil, err)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -163,11 +163,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request casting error challenge was not found",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On(
-					"WithError",
+				l.EXPECT().WithError(
 					fmt.Errorf("casting data: %w", errors.New("challenge was not found")),
 				).Return(l).Once()
-				l.On("Errorf", "cannot validate pow challenge info").Once()
+				l.EXPECT().Errorf("cannot validate pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
 			prepareSigner: func(s *signermock.Signer) {
@@ -177,10 +176,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -188,7 +187,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request not valid until",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("Warnf", "pow is not correct").Once()
+				l.EXPECT().Warnf("pow is not correct").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
 			prepareSigner: func(s *signermock.Signer) {
@@ -199,10 +198,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -210,7 +209,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request another ip",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("Warnf", "pow is not correct").Once()
+				l.EXPECT().Warnf("pow is not correct").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
 			prepareSigner: func(s *signermock.Signer) {
@@ -221,10 +220,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -232,7 +231,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request another url",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("Warnf", "pow is not correct").Once()
+				l.EXPECT().Warnf("pow is not correct").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {},
 			prepareSigner: func(s *signermock.Signer) {
@@ -243,10 +242,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url + "/another",
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -254,11 +253,11 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request error restoring challenge",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("WithError", fmt.Errorf("restoring challenge: %w", err)).Return(l).Once()
-				l.On("Errorf", "cannot validate pow challenge info").Once()
+				l.EXPECT().WithError(fmt.Errorf("restoring challenge: %w", err)).Return(l).Once()
+				l.EXPECT().Errorf("cannot validate pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
-				f.On("RestoreChallenge", ctx, challengeStr).Return(nil, err).Once()
+				f.EXPECT().RestoreChallenge(ctx, challengeStr).Return(nil, err).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {
 				data := map[string]interface{}{
@@ -268,10 +267,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -279,14 +278,14 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 			name:   "get request error checking solution",
 			method: http.MethodGet,
 			prepareLogger: func(l *loggermock.Logger) {
-				l.On("WithError", fmt.Errorf("checking solution: %w", err)).Return(l).Once()
-				l.On("Errorf", "cannot validate pow challenge info").Once()
+				l.EXPECT().WithError(fmt.Errorf("checking solution: %w", err)).Return(l).Once()
+				l.EXPECT().Errorf("cannot validate pow challenge info").Once()
 			},
 			prepareChallengeFactory: func(f *powmock.ChallengeFactory) {
 				clg := powmock.NewChallenge(t)
-				clg.On("Check", ctx, mock.Anything, mock.Anything).Return(false, err).Once()
+				clg.EXPECT().Check(ctx, mock.Anything, mock.Anything).Return(false, err).Once()
 
-				f.On("RestoreChallenge", ctx, challengeStr).Return(clg, nil).Once()
+				f.EXPECT().RestoreChallenge(ctx, challengeStr).Return(clg, nil).Once()
 			},
 			prepareSigner: func(s *signermock.Signer) {
 				data := map[string]interface{}{
@@ -296,10 +295,10 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 					"uri":        url,
 				}
 
-				s.On("Restore", mock.Anything).Return(typeutils.NewMapper(data), nil)
+				s.EXPECT().Restore(mock.Anything).Return(typeutils.NewMapper(data), nil)
 			},
 			prepareWriter: func(w *stdmock.ResponseWriter) {
-				w.On("WriteHeader", http.StatusUnauthorized).Once()
+				w.EXPECT().WriteHeader(http.StatusUnauthorized).Once()
 			},
 			expectErr: true,
 		},
@@ -329,7 +328,7 @@ func TestService_HTTPMiddleware_ServeHTTP(t *testing.T) {
 
 			handler := stdmock.NewHandler(t)
 			if !tc.expectErr {
-				handler.On("ServeHTTP", w, r).Once()
+				handler.EXPECT().ServeHTTP(w, r).Once()
 			}
 
 			srv := New(l, cf, s, validDuration)
